@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="achtergrond">#eef1ea</color>
+    <color name="icoon_achtergrond">#2f7d32</color>
+    <style name="MowerLab" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/achtergrond</item>
+        <item name="android:colorBackground">@color/achtergrond</item>
+        <item name="android:statusBarColor">@color/achtergrond</item>
+        <item name="android:navigationBarColor">@color/achtergrond</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

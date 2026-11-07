@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Mower Lab</title>
+<style>
+:root {
+  --bg: #eef1ea; --paneel: #ffffff; --lijn: #d9dfd3; --lijn2: #e9ede5; --tekst: #1d2a1c; --tekst2: #4d5b4b; --zacht: #7a8778;
+  --accent: #2f7d32; --accent-tekst: #fff; --accent-zacht: #e2f0dd; --gevaar: #b42318; --waarsch: #b45309;
+  --veld: #dfe6d8; --raster: rgba(40,60,30,.08); --raster5: rgba(40,60,30,.16);
+  --schaduw: 0 1px 2px rgba(20,40,20,.06), 0 3px 10px rgba(20,40,20,.06);
+  --c0: #2a78d6; --c1: #eb6834; --c2: #2fa3c4; --c3: #d6457a; --c4: #e0a000; --c5: #8a5cd6; --c6: #1baf7a;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121611; --paneel: #1b2119; --lijn: #313a2e; --lijn2: #262d23; --tekst: #e7ece4; --tekst2: #b1bcad; --zacht: #84907f;
+    --accent: #5cb860; --accent-tekst: #0c1a0c; --accent-zacht: #233322; --gevaar: #f07167; --waarsch: #f0a54a;
+    --veld: #1a2118; --raster: rgba(220,240,210,.05); --raster5: rgba(220,240,210,.1);
+    --schaduw: none;
+    --c0: #3b8be6; --c1: #e2693a; --c2: #2f9fc0; --c3: #d9588a; --c4: #b88a00; --c5: #a07ae6; --c6: #21a877;
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--tekst); font-size: 14px; line-height: 1.4; display: flex; flex-direction: column; overflow: hidden; }
+button, input, select { font: inherit; color: inherit; }
+header { display: flex; align-items: center; gap: 14px; padding: 8px 14px; background: var(--paneel); border-bottom: 1px solid var(--lijn); flex: none; }
+.logo { display: flex; align-items: center; gap: 8px; font-weight: 750; font-size: 18px; letter-spacing: -.01em; white-space: nowrap; }
+.logo svg { width: 26px; height: 26px; }
+nav { display: flex; gap: 4px; overflow-x: auto; }
+nav button { border: 0; background: none; padding: 9px 14px; border-radius: 9px; font-weight: 650; color: var(--tekst2); cursor: pointer; white-space: nowrap; }
+nav button[aria-selected="true"] { background: var(--accent-zacht); color: var(--accent); }
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: 360px 1fr; }
+aside { overflow-y: auto; border-right: 1px solid var(--lijn); background: var(--paneel); padding: 14px 14px 40px; }
+.werk { position: relative; min-width: 0; min-height: 0; background: var(--veld); }
+canvas#doek { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+section.tab { display: none; } section.tab.actief { display: block; }
+h2 { font-size: 17px; margin: 0 0 10px; }
+h3 { font-size: 13px; margin: 18px 0 8px; color: var(--tekst2); text-transform: uppercase; letter-spacing: .06em; }
+.uitleg { color: var(--tekst2); font-size: 13px; margin: 6px 0 10px; }
+.knop { border: 1px solid var(--lijn); background: var(--paneel); padding: 9px 13px; border-radius: 10px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; }
+.knop:hover { border-color: var(--zacht); }
+.knop.hoofd { background: var(--accent); border-color: var(--accent); color: var(--accent-tekst); }
+.knop.gevaar { color: var(--gevaar); }
+.knop.klein { min-height: 32px; padding: 5px 9px; font-size: 13px; }
+.knop:disabled { opacity: .45; cursor: default; }
+.rij { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rij > .groei { flex: 1; }
+.gereedschap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.gereedschap button { border: 1px solid var(--lijn); background: var(--paneel); border-radius: 10px; padding: 8px 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--tekst2); min-height: 62px; }
+.gereedschap button svg { width: 24px; height: 24px; }
+.gereedschap button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-zacht); color: var(--accent); }
+label.veld { display: block; margin: 0 0 12px; }
+label.veld > span { display: flex; justify-content: space-between; font-size: 13px; color: var(--tekst2); font-weight: 600; margin-bottom: 4px; }
+label.veld > span b { color: var(--tekst); font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+input[type=number], input[type=text], select { width: 100%; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--lijn); background: var(--bg); min-height: 38px; }
+input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
+label.vink { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 13.5px; cursor: pointer; }
+.kaart { border: 1px solid var(--lijn); border-radius: 12px; padding: 12px; margin: 0 0 12px; background: var(--paneel); }
+.stat { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.stat dt { color: var(--tekst2); } .stat dd { margin: 0; text-align: right; font-weight: 650; }
+.groot { font-size: 30px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.balk { height: 8px; border-radius: 4px; background: var(--lijn2); overflow: hidden; }
+.balk > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .15s; }
+.balk.batterij > i { background: linear-gradient(90deg, #d64545, #e0a000 30%, #2f9e44 60%); }
+/* regels */
+.regel { border: 1px solid var(--lijn); border-radius: 12px; margin: 0 0 12px; overflow: hidden; }
+.regel > .kop { padding: 9px 12px; background: var(--accent-zacht); font-weight: 700; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+.regel > .kop .zacht { font-weight: 500; color: var(--tekst2); font-size: 12.5px; }
+.regel .stappen { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.stap { display: grid; grid-template-columns: 22px 1fr auto; gap: 6px; align-items: start; background: var(--bg); border-radius: 9px; padding: 7px; }
+.stap .nr { width: 22px; height: 22px; border-radius: 50%; background: var(--paneel); border: 1px solid var(--lijn); font-size: 11px; font-weight: 700; display: grid; place-items: center; margin-top: 7px; }
+.stap .params { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
+.stap .params select, .stap .params input { width: auto; min-height: 34px; padding: 5px 7px; }
+.stap .params input[type=number] { width: 72px; }
+.stap .acties { display: flex; flex-direction: column; gap: 2px; }
+.stap .acties button { border: 0; background: none; cursor: pointer; padding: 3px 6px; color: var(--tekst2); font-size: 14px; border-radius: 6px; }
+.stap .acties button:hover { background: var(--lijn2); }
+.leeg { color: var(--zacht); font-size: 13px; padding: 4px 6px; }
+.anders { padding: 9px 12px; font-size: 13px; color: var(--tekst2); border: 1px dashed var(--lijn); border-radius: 12px; margin-bottom: 12px; }
+/* werkbalk boven het veld */
+.zwevend { position: absolute; z-index: 3; display: flex; gap: 6px; flex-wrap: wrap; }
+.zwevend .knop { box-shadow: var(--schaduw); }
+#zoom { right: 12px; bottom: 12px; flex-direction: column; }
+#zoom .knop { width: 44px; height: 44px; padding: 0; font-size: 20px; }
+#hint { left: 12px; top: 12px; background: var(--paneel); border: 1px solid var(--lijn); border-radius: 10px; padding: 8px 12px; font-size: 13px; box-shadow: var(--schaduw); max-width: calc(100% - 90px); }
+#hint:empty { display: none; }
+#simbalk { left: 12px; bottom: 12px; right: 70px; background: var(--paneel); border: 1px solid var(--lijn); border-radius: 12px; padding: 8px; box-shadow: var(--schaduw); align-items: center; display: none; }
+#simbalk.zichtbaar { display: flex; }
+#simbalk select { width: auto; }
+#simbalk .tijd { font-variant-numeric: tabular-nums; font-weight: 700; padding: 0 6px; }
+/* vergelijken */
+#vergelijk { position: absolute; inset: 0; z-index: 4; background: var(--bg); overflow: auto; padding: 16px; display: none; }
+#vergelijk.zichtbaar { display: block; }
+#vergelijk .kaart { max-width: 1100px; }
+.grafiek { position: relative; height: 360px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 8px; border-bottom: 1px solid var(--lijn2); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-size: 12px; color: var(--tekst2); font-weight: 650; }
+td .stip { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 7px; vertical-align: -1px; }
+td.best { color: var(--accent); font-weight: 750; }
+.tabelbox { overflow-x: auto; }
+.voortgang { height: 6px; border-radius: 3px; background: var(--lijn2); overflow: hidden; margin: 10px 0; }
+.voortgang i { display: block; height: 100%; width: 0; background: var(--accent); }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--tekst2); margin: 6px 0 0; }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; } .legenda i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); background: var(--tekst); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 600; z-index: 50; opacity: 0; transition: opacity .25s; pointer-events: none; max-width: calc(100vw - 32px); }
+.toast.zichtbaar { opacity: 1; }
+@media (max-width: 820px) {
+  main { grid-template-columns: 1fr; grid-template-rows: 55% 45%; }
+  aside { order: 2; border-right: 0; border-top: 1px solid var(--lijn); }
+  .werk { order: 1; }
+  .logo span { display: none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="7" fill="#2f7d32"/><circle cx="13" cy="14" r="7" fill="#dfeccf"/><path d="M13 14 L13 7.5" stroke="#2f7d32" stroke-width="2.4" stroke-linecap="round"/><circle cx="13" cy="14" r="2.2" fill="#2f7d32"/><path d="M4 22c2-2 4-2 6 0s4 2 6 0 4-2 6 0" stroke="#9ad35a" stroke-width="1.6" fill="none"/></svg>
+    <span>Mower Lab</span>
+  </div>
+  <nav role="tablist">
+    <button data-tab="tuin" aria-selected="true">Garden</button>
+    <button data-tab="maaier">Mower</button>
+    <button data-tab="algo">Algorithms</button>
+    <button data-tab="sim">Simulate</button>
+    <button data-tab="verg">Compare</button>
+  </nav>
+</header>
+<main>
+  <aside>
+    <!-- TUIN -->
+    <section class="tab actief" id="tab-tuin">
+      <h2>Design your garden</h2>
+      <div class="rij" style="margin-bottom:12px">
+        <select id="voorbeeld" class="groei"></select>
+        <button class="knop" id="b-voorbeeld">Load</button>
+      </div>
+      <div class="gereedschap" id="gereedschap"></div>
+      <div id="tool-opties" style="margin-top:10px"></div>
+      <h3>Selected</h3>
+      <div id="selectie" class="uitleg">Tap a shape with the Select tool to move it, drag its points, or delete it.</div>
+      <h3>Options</h3>
+      <label class="veld"><span>Snap to grid</span>
+        <select id="snap"><option value="0">Off</option><option value="0.1">10 cm</option><option value="0.25">25 cm</option><option value="0.5" selected>50 cm</option><option value="1">1 m</option></select></label>
+      <div class="rij">
+        <button class="knop" id="b-undo">↶ Undo</button>
+        <button class="knop" id="b-passend">Fit to screen</button>
+        <button class="knop gevaar" id="b-leeg">Clear all</button>
+      </div>
+      <h3>Garden</h3>
+      <dl class="stat" id="tuin-stat"></dl>
+      <h3>File</h3>
+      <div class="rij">
+        <button class="knop" id="b-export">Save to file</button>
+        <button class="knop" id="b-import">Open file</button>
+      </div>
+      <input type="file" id="f-import" accept=".json,application/json" hidden>
+      <p class="uitleg">The file holds the garden, the mower settings and all your algorithms.</p>
+    </section>
+
+    <!-- MAAIER -->
+    <section class="tab" id="tab-maaier">
+      <h2>Mower</h2>
+      <div id="maaier-velden"></div>
+      <p class="uitleg">The cutting disc sits inside the chassis, so the mower can never cut right up to an edge or obstacle; the strip it can't reach shows up as the "reachable" maximum in the results.</p>
+    </section>
+
+    <!-- ALGORITMEN -->
+    <section class="tab" id="tab-algo">
+      <h2>Algorithms</h2>
+      <div class="rij" style="margin-bottom:10px">
+        <select id="algo-lijst" class="groei"></select>
+      </div>
+      <div class="rij" style="margin-bottom:14px">
+        <button class="knop klein" id="b-algo-nieuw">+ New</button>
+        <button class="knop klein" id="b-algo-kopie">Duplicate</button>
+        <button class="knop klein gevaar" id="b-algo-wis">Delete</button>
+        <button class="knop klein" id="b-algo-reset" title="Bring back the built-in examples">Restore examples</button>
+      </div>
+      <div id="algo-editor"></div>
+    </section>
+
+    <!-- SIMULEREN -->
+    <section class="tab" id="tab-sim">
+      <h2>Simulate</h2>
+      <label class="veld"><span>Algorithm</span><select id="sim-algo"></select></label>
+      <div class="kaart">
+        <div class="rij" style="justify-content:space-between;align-items:baseline">
+          <div><div class="groot" id="s-dekking">0%</div><div class="uitleg" style="margin:0" id="s-dekking-sub">of the lawn mowed</div></div>
+          <div style="text-align:right"><div style="font-weight:700;font-variant-numeric:tabular-nums" id="s-tijd">0:00</div><div class="uitleg" style="margin:0" id="s-modus">ready</div></div>
+        </div>
+        <div class="balk" style="margin:10px 0 4px"><i id="s-dekking-balk"></i></div>
+        <div class="rij" style="font-size:12.5px;color:var(--tekst2);margin-top:8px"><span>Battery</span><div class="balk batterij groei"><i id="s-batt"></i></div><span id="s-batt-tekst" style="font-variant-numeric:tabular-nums;min-width:36px;text-align:right">100%</span></div>
+      </div>
+      <dl class="stat kaart" id="s-stat"></dl>
+      <div class="kaart"><div style="position:relative;height:150px"><canvas id="g-sim"></canvas></div></div>
+      <h3>Stop when</h3>
+      <div class="rij">
+        <label class="veld groei" style="margin:0"><span>Coverage reaches</span><select id="s-doel"><option value="0.9">90%</option><option value="0.95" selected>95%</option><option value="0.98">98%</option><option value="0.99">99%</option><option value="1">100%</option></select></label>
+        <label class="veld groei" style="margin:0"><span>or time reaches</span><select id="s-limiet"><option value="8">8 h</option><option value="24" selected>24 h</option><option value="48">48 h</option><option value="96">96 h</option></select></label>
+      </div>
+      <p class="uitleg">Coverage is measured against what this mower can reach at all (cells too close to an edge for the cutting disc don't count against it).</p>
+      <h3>Show</h3>
+      <label class="vink"><input type="checkbox" id="v-spoor" checked> Path of the mower</label>
+      <label class="vink"><input type="checkbox" id="v-hitte"> How often each spot was mowed</label>
+      <label class="vink"><input type="checkbox" id="v-onbereik"> Spots the mower can't reach</label>
+    </section>
+
+    <!-- VERGELIJKEN -->
+    <section class="tab" id="tab-verg">
+      <h2>Compare algorithms</h2>
+      <p class="uitleg">Runs each algorithm on this garden with this mower, as fast as possible, and compares how quickly the lawn gets covered.</p>
+      <div id="verg-lijst"></div>
+      <div class="rij" style="margin-top:10px">
+        <label class="veld groei" style="margin:0"><span>Runs each</span><select id="v-runs"><option value="1">1</option><option value="3" selected>3</option><option value="5">5</option></select></label>
+        <label class="veld groei" style="margin:0"><span>Up to</span><select id="v-limiet"><option value="12">12 h</option><option value="24" selected>24 h</option><option value="48">48 h</option></select></label>
+      </div>
+      <p class="uitleg">Several runs use different random seeds and are averaged, so lucky or unlucky runs even out.</p>
+      <button class="knop hoofd" id="b-verg" style="width:100%">Run comparison</button>
+      <div class="voortgang"><i id="v-voortgang"></i></div>
+      <div class="uitleg" id="v-status"></div>
+    </section>
+  </aside>
+
+  <div class="werk" id="werk">
+    <canvas id="doek"></canvas>
+    <div class="zwevend" id="hint"></div>
+    <div class="zwevend" id="zoom"><button class="knop" id="z-in" aria-label="Zoom in">+</button><button class="knop" id="z-uit" aria-label="Zoom out">−</button><button class="knop" id="z-pas" aria-label="Fit" style="font-size:15px">⤢</button></div>
+    <div class="zwevend" id="simbalk">
+      <button class="knop hoofd" id="b-play" style="min-width:92px">▶ Play</button>
+      <button class="knop" id="b-reset" title="Start again">⟲</button>
+      <button class="knop" id="b-eind" title="Run until the target is reached">⏭ To the end</button>
+      <select id="b-snel"><option value="1">1×</option><option value="10">10×</option><option value="60" selected>60×</option><option value="300">300×</option><option value="1200">1200×</option><option value="5000">5000×</option></select>
+      <span class="tijd" id="b-tijd"></span>
+    </div>
+    <div id="vergelijk">
+      <div class="kaart">
+        <h2 style="margin-bottom:4px">Coverage over time</h2>
+        <div class="legenda" id="v-legenda"></div>
+        <div class="grafiek"><canvas id="g-verg"></canvas></div>
+      </div>
+      <div class="kaart"><h2>Results</h2><div class="tabelbox"><table id="v-tabel"></table></div>
+        <p class="uitleg">Times are simulated hours from the start, including charging. Green marks the best value in each column. "Passes" is how many times the average mowed spot was cut when the run ended.</p></div>
+    </div>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="lib/chart.umd.min.js"></script>
+<script src="sim.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
